@@ -1,0 +1,10 @@
+*.o
+*.ko
+*.ko.gz
+counter/counter
+counter/*_bin.h
+drv/.tmp_versions
+drv/Module.symvers
+drv/modules.order
+drv/*.mod.c
+drv/*.cmd
