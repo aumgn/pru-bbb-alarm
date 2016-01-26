@@ -8,3 +8,4 @@ drv/Module.symvers
 drv/modules.order
 drv/*.mod.c
 drv/*.cmd
+dtbs/*.dtb

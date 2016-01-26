@@ -3,34 +3,44 @@
 
 #include <pruss_intc_mapping.h>
 
-start:
-    // 20000 * 5000 * 2 (instructions per step)
-    // makes for around 1 second.
-    MOV r1, #20000
-    MOV r3, #5000
+// "200000000" => 200Mhz
+// "/ 2" => 2 instructions per step
+// "- 2" => 2 instructions per loop
+// makes for around 1 second.
+#define WAIT_LIMIT (200000000 / 2) - 2
 
-    MOV r10, 0b0011111101010000
-    MOV r4, #0
+#define DRAM_ADDR c24
+
+#define out r30
+#define reset_mask r0
+#define counter r1
+#define digit_addr r2
+#define digit_mask r3
+#define wait_count r10
+#define wait_limit r11
+
+start:
+    MOV wait_limit.w0, WAIT_LIMIT & 0xFFFF
+    MOV wait_limit.w2, WAIT_LIMIT >> 16
+
+    MOV reset_mask, #0b0011111101010000
+    MOV counter, #0
 
 display_digit:
-    LSL r5, r4, #1
-    LBCO r11, C24, r5, 16
-    AND r30, r30, r10
-    OR  r30, r30, r11
+    LSL digit_addr, counter, #1
+    LBCO digit_mask, DRAM_ADDR, digit_addr, #16
+    AND out, out, reset_mask
+    OR  out, out, digit_mask
 
 incr:
-    ADD r4, r4, #1
-    QBLE end, r4, #17
+    ADD counter, counter, #1
+    QBLE end, counter, #17
 
 wait:
-    MOV r0, #0
-    MOV r2, #0
+    MOV wait_count, #0
 wait_loop:
-    ADD r0, r0, #1
-    QBLT wait_loop, r1, r0
-    MOV r0, #0
-    ADD r2, r2, #1
-    QBLT wait_loop, r3, r2
+    ADD wait_count, wait_count, #1
+    QBLT wait_loop, wait_limit, wait_count
     QBA display_digit
 
 end:
